@@ -1,0 +1,15 @@
+{
+  "name": "web-scrapers",
+  "version": "1.0.0",
+  "description": "A collection of web scrapers for different tasks written in Javascript.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Fabian Dean Flores",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "puppeteer": "^2.0.0"
+  }
+}

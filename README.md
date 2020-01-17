@@ -1,2 +1,2 @@
 # Web-Scrapers
- A collection of different web scrapers for specific tasks.
+ A collection of web scrapers for different tasks witten in Javascript.
