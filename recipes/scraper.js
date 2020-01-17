@@ -4,6 +4,10 @@ const iPhoneX = devices['iPhone X'];
 
 const url = 'https://www.foodnetwork.com/recipes/photos/our-10-most-popular-recipes-right-now.com';
 
+/* Food Network Search Endpoint
+    foodnetwork.com/search/<query>-
+*/
+
 const run = async () => {
     let trendingRecipes = [];
 
@@ -29,13 +33,19 @@ const getTrending = async (page) => {
         let data = [];
         document.querySelectorAll('.o-PhotoGalleryPromo__m-MediaBlock').forEach(async (item) => {
             await item.querySelector('.more').click();
-            const title = await item.querySelector('.o-PhotoGalleryPromo__a-HeadlineText');
-            const description = await item.querySelector('.originalText');
-            const imageURL = await item.querySelector('.m-MediaBlock__a-Image').getAttribute('src');
+            const title = await item.querySelector('.o-PhotoGalleryPromo__a-HeadlineText')
+                .textContent.replace(/No\.\s[0-9][0-9]*\:\s/, '');
+            const description = await item.querySelector('.originalText')
+                .textContent.replace(' ... less', '');
+            const imageURL = await item.querySelector('.m-MediaBlock__a-Image')
+                .getAttribute('src').substr(2);
+            const recipeURL = await item.querySelector('div.m-MediaBlock__m-TextWrap > section > p > a')
+                .getAttribute('href').substr(2);
             data.push({
-                title: title.textContent.replace(/No\.\s[0-9][0-9]*\:\s/, ''),
-                description: description.textContent.replace(' ... less', ''),
-                imageURL: imageURL
+                title: title,
+                description: description,
+                imageURL: imageURL,
+                recipeURL: recipeURL
             });
         });
         return data;
