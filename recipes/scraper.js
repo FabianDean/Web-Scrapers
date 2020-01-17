@@ -17,8 +17,15 @@ const run = async () => {
         waitUntil: "domcontentloaded"
     });
     
-    await page.waitForXPath('//*[@id="mod-vertical-gallery-1"]/div');
-    trendingRecipes = await page.evaluate(() => {
+    trendingRecipes = await getTrending(page);
+
+    console.log(trendingRecipes);
+
+    browser.close();
+}
+
+const getTrending = async (page) => {
+    return await page.evaluate(() => {
         let data = [];
         document.querySelectorAll('.o-PhotoGalleryPromo__m-MediaBlock').forEach(async (item) => {
             await item.querySelector('.more').click();
@@ -26,17 +33,13 @@ const run = async () => {
             const description = await item.querySelector('.originalText');
             const imageURL = await item.querySelector('.m-MediaBlock__a-Image').getAttribute('src');
             data.push({
-                imageURL: imageURL,
                 title: title.textContent.replace(/No\.\s[0-9][0-9]*\:\s/, ''),
-                description: description.textContent.replace(' ... less', '')
+                description: description.textContent.replace(' ... less', ''),
+                imageURL: imageURL
             });
         });
         return data;
     });
-
-    console.log(trendingRecipes);
-
-    browser.close();
 }
 
 const autoScroll = async (page) => {
