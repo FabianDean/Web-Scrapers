@@ -20,26 +20,80 @@ const run = async () => {
     await page.goto(url, {
         waitUntil: "domcontentloaded"
     });
-    
-    trendingRecipes = await getTrending(page);
 
-    console.log(trendingRecipes);
+    // trendingRecipes = await getTrending(page);
+    // console.log(trendingRecipes);
+    // https://www.foodnetwork.com/recipes/anne-burrell/lasagna-recipe-1952672
+    // https://www.foodnetwork.com/recipes/food-network-kitchen/hamburgers-recipe2-2040357
+    const recipe = await getRecipeDetails('https://www.foodnetwork.com/recipes/food-network-kitchen/hamburgers-recipe2-2040357', page);
+    console.log(recipe);
+
 
     browser.close();
 }
 
+/**
+ * @function getRecipeDetails()
+ * @param {string} url 
+ * @param {Page} page
+ * @return Recipe as JSON object
+ * @summary Takes in recipe url and page to extract its information
+ */
+const getRecipeDetails = async (url, page) => {
+    await page.goto(url, {
+        waitUntil: "domcontentloaded"
+    });
+    return await page.evaluate(() => {
+        let ingredients = [];
+        let directions = [];
+        const recipeBlock = document.querySelector('.o-Recipe');
+        let title = recipeBlock.querySelector('.o-AssetTitle__a-HeadlineText').textContent;
+        let imageURL = recipeBlock.querySelector('.m-MediaBlock__a-Image').getAttribute('src').substr(2);
+        let level = document.evaluate("//span[contains(text(),'Level:')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
+            .singleNodeValue.parentElement.children[1].textContent;
+        let servings = document.evaluate("//span[contains(text(),'Yield:')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
+            .singleNodeValue.parentElement.children[1].textContent;
+        let totalTime = recipeBlock.querySelector('#mod-recipe-lead-1 > div.recipeInfo > div > ul.o-RecipeInfo__m-Time > li:nth-child(1) > span.o-RecipeInfo__a-Description.m-RecipeInfo__a-Description--Total')
+            .textContent.trim();
+        recipeBlock.querySelectorAll('.o-Ingredients__a-Ingredient')
+            .forEach(item => {
+                ingredients.push(item.textContent); // adds to beginning of ingredients array
+            });
+        recipeBlock.querySelector('#mod-recipe-method-1 > div > ol:nth-child(1)').querySelectorAll('li')
+            .forEach((child) => {
+                directions.push(child.textContent.trim());
+            });
+
+        return {
+            title: title,
+            imageURL: imageURL,
+            level: level,
+            servings: servings,
+            totalTime: totalTime,
+            ingredients: ingredients,
+            directions: directions
+        };
+    });
+}
+
+/** 
+ * @function getTrending()
+ * @param page
+ * @summary Takes in the Trending Recipes page from the Food Network's site and returns the recipes.
+ * @returns Array of recipes as JSON objects
+*/
 const getTrending = async (page) => {
     return await page.evaluate(() => {
         let data = [];
         document.querySelectorAll('.o-PhotoGalleryPromo__m-MediaBlock').forEach(async (item) => {
-            await item.querySelector('.more').click();
-            const title = await item.querySelector('.o-PhotoGalleryPromo__a-HeadlineText')
+            item.querySelector('.more').click();
+            const title = item.querySelector('.o-PhotoGalleryPromo__a-HeadlineText')
                 .textContent.replace(/No\.\s[0-9][0-9]*\:\s/, '');
-            const description = await item.querySelector('.originalText')
+            const description = item.querySelector('.originalText')
                 .textContent.replace(' ... less', '');
-            const imageURL = await item.querySelector('.m-MediaBlock__a-Image')
+            const imageURL = item.querySelector('.m-MediaBlock__a-Image')
                 .getAttribute('src').substr(2);
-            const recipeURL = await item.querySelector('div.m-MediaBlock__m-TextWrap > section > p > a')
+            const recipeURL = item.querySelector('div.m-MediaBlock__m-TextWrap > section > p > a')
                 .getAttribute('href').substr(2);
             data.push({
                 title: title,
@@ -62,7 +116,7 @@ const autoScroll = async (page) => {
                 window.scrollBy(0, distance);
                 totalHeight += distance;
 
-                if(totalHeight >= scrollHeight){
+                if (totalHeight >= scrollHeight) {
                     clearInterval(timer);
                     resolve();
                 }
